@@ -5,22 +5,20 @@ import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import io.github._4drian3d.unsignedvelocity.UnSignedVelocity;
 import io.github._4drian3d.unsignedvelocity.configuration.Configuration;
 import io.github._4drian3d.unsignedvelocity.listener.EventListener;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Field;
 
 public class ConnectListener implements EventListener {
-    private static final MethodHandle KEY_SETTER;
+    private static final Field KEY;
 
     static {
+
         try {
-            final var lookup = MethodHandles.privateLookupIn(ConnectedPlayer.class, MethodHandles.lookup());
-            KEY_SETTER = lookup.findSetter(ConnectedPlayer.class, "playerKey", IdentifiedKey.class);
+            KEY = ConnectedPlayer.class.getDeclaredField( "playerKey");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -39,7 +37,8 @@ public class ConnectListener implements EventListener {
         }
         final Player player = event.getPlayer();
         if (player.getIdentifiedKey() != null) {
-            KEY_SETTER.invoke(player, null);
+            KEY.setAccessible(true);
+            KEY.set(player, null);
         }
     }
 

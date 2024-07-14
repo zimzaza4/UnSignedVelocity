@@ -7,9 +7,8 @@ import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.packet.chat.CommandHandler;
 import com.velocitypowered.proxy.protocol.packet.chat.builder.ChatBuilderV2;
-import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerCommand;
+import com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedPlayerCommandPacket;
 import io.github._4drian3d.unsignedvelocity.UnSignedVelocity;
 import io.github._4drian3d.unsignedvelocity.configuration.Configuration;
 import io.github._4drian3d.unsignedvelocity.listener.EventListener;
@@ -17,7 +16,8 @@ import io.github._4drian3d.vpacketevents.api.event.PacketReceiveEvent;
 
 import java.util.concurrent.CompletableFuture;
 
-public final class KeyedCommandListener implements EventListener, CommandHandler<KeyedPlayerCommand> {
+public final class KeyedCommandListener implements EventListener, SimpleCommandHandler {
+
     @Inject
     private Configuration configuration;
     @Inject
@@ -42,7 +42,7 @@ public final class KeyedCommandListener implements EventListener, CommandHandler
     }
 
     public void onCommand(final PacketReceiveEvent event) {
-        if (!(event.getPacket() instanceof final KeyedPlayerCommand packet)) {
+        if (!(event.getPacket() instanceof final KeyedPlayerCommandPacket packet)) {
             return;
         }
 
@@ -52,7 +52,7 @@ public final class KeyedCommandListener implements EventListener, CommandHandler
         event.setResult(ResultedEvent.GenericResult.denied());
         final String commandExecuted = packet.getCommand();
 
-        queueCommandResult(proxyServer, player, commandEvent -> {
+        queueCommandResult(proxyServer, player, (commandEvent, newLastSeenMessages) -> {
             final CommandExecuteEvent.CommandResult result = commandEvent.getResult();
             if (result == CommandExecuteEvent.CommandResult.denied()) {
                 return CompletableFuture.completedFuture(null);
@@ -87,16 +87,8 @@ public final class KeyedCommandListener implements EventListener, CommandHandler
                         .message("/" + commandToRun)
                         .toServer();
             });
-        }, packet.getCommand(), packet.getTimestamp());
+        }, packet.getCommand(), packet.getTimestamp(), null);
     }
 
-    @Override
-    public Class<KeyedPlayerCommand> packetClass() {
-        return KeyedPlayerCommand.class;
-    }
 
-    @Override
-    public void handlePlayerCommandInternal(KeyedPlayerCommand keyedPlayerCommand) {
-        //noop
-    }
 }

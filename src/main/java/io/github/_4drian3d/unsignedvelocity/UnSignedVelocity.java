@@ -17,7 +17,6 @@ import io.github._4drian3d.unsignedvelocity.listener.packet.command.SessionComma
 import io.github._4drian3d.unsignedvelocity.listener.packet.data.ServerDataListener;
 import io.github._4drian3d.unsignedvelocity.utils.Constants;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
-import org.bstats.velocity.Metrics;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -39,15 +38,13 @@ public final class UnSignedVelocity {
     @DataDirectory
     private Path path;
     @Inject
-    private Metrics.Factory factory;
-    @Inject
     private ComponentLogger logger;
     private Configuration configuration;
 
 
     @Subscribe
     void onProxyInitialize(final ProxyInitializeEvent event) {
-        factory.make(this, 17514);
+
 
         try {
             configuration = Configuration.loadConfig(path);

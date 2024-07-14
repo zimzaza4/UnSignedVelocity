@@ -7,16 +7,16 @@ import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
-import com.velocitypowered.proxy.protocol.packet.chat.CommandHandler;
-import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommand;
+import com.velocitypowered.proxy.protocol.packet.chat.session.SessionPlayerCommandPacket;
 import io.github._4drian3d.unsignedvelocity.UnSignedVelocity;
 import io.github._4drian3d.unsignedvelocity.configuration.Configuration;
 import io.github._4drian3d.unsignedvelocity.listener.EventListener;
+import io.github._4drian3d.unsignedvelocity.utils.ReflectionUtils;
 import io.github._4drian3d.vpacketevents.api.event.PacketReceiveEvent;
 
 import java.util.concurrent.CompletableFuture;
 
-public final class SessionCommandListener implements EventListener, CommandHandler<SessionPlayerCommand> {
+public final class SessionCommandListener implements EventListener, SimpleCommandHandler{
     @Inject
     private Configuration configuration;
     @Inject
@@ -41,7 +41,7 @@ public final class SessionCommandListener implements EventListener, CommandHandl
     }
 
     public void onCommand(final PacketReceiveEvent event) {
-        if (!(event.getPacket() instanceof final SessionPlayerCommand packet)) {
+        if (!(event.getPacket() instanceof final SessionPlayerCommandPacket packet)) {
             return;
         }
 
@@ -51,7 +51,7 @@ public final class SessionCommandListener implements EventListener, CommandHandl
         event.setResult(ResultedEvent.GenericResult.denied());
         final String commandExecuted = packet.getCommand();
 
-        queueCommandResult(proxyServer, player, commandEvent -> {
+        queueCommandResult(proxyServer, player, (commandEvent, newLastSeenMessages) -> {
             final CommandExecuteEvent.CommandResult result = commandEvent.getResult();
             if (result == CommandExecuteEvent.CommandResult.denied()) {
                 return CompletableFuture.completedFuture(null);
@@ -66,6 +66,7 @@ public final class SessionCommandListener implements EventListener, CommandHandl
                             .builder()
                             .setTimestamp(packet.getTimeStamp())
                             .asPlayer(player)
+                            .setLastSeenMessages(newLastSeenMessages)
                             .message("/" + commandToRun)
                             .toServer());
                 }
@@ -81,20 +82,11 @@ public final class SessionCommandListener implements EventListener, CommandHandl
                             .builder()
                             .setTimestamp(packet.getTimeStamp())
                             .asPlayer(player)
+                            .setLastSeenMessages(newLastSeenMessages)
                             .message("/" + commandToRun)
                             .toServer();
                 }
             });
-        }, commandExecuted, packet.getTimeStamp());
-    }
-
-    @Override
-    public Class<SessionPlayerCommand> packetClass() {
-        return SessionPlayerCommand.class;
-    }
-
-    @Override
-    public void handlePlayerCommandInternal(SessionPlayerCommand sessionPlayerCommand) {
-        // noop
+        }, packet.getCommand(), packet.getTimeStamp(), ReflectionUtils.getLastSeenMessages(packet));
     }
 }

@@ -8,14 +8,17 @@ plugins {
 repositories {
     maven("https://papermc.io/repo/repository/maven-public/")
     maven("https://mvn.exceptionflug.de/repository/exceptionflug-public/")
+    maven("https://maven.elytrium.net/repo/")
 }
 
 dependencies {
     implementation(libs.bstats)
     compileOnly(libs.velocity.api)
-    compileOnly(libs.velocity.proxy)
+    compileOnly(files("libs/velocity.jar"))
     annotationProcessor(libs.velocity.api)
     compileOnly(libs.vpacketevents)
+    implementation("ninja.leaping.configurate:configurate-core:3.3")
+    implementation("ninja.leaping.configurate:configurate-hocon:3.3")
 }
 
 blossom {
